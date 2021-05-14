@@ -1,5 +1,67 @@
 import numpy as np
 import math
+import fractions
+
+
+def sign(n):
+    if n < 0:
+        return -1
+    else:
+        return 1
+
+
+def QR_decomposition_Householder(A, verbose=False):
+    # P = I - 1/beta*u*u^T
+    P = []
+    i = 0
+    for i in range(0, len(A) - 1):
+        text = ""
+        print(f"Pasul {i + 1}:")
+        for a in np.squeeze(np.asarray(A[i:, i])):
+            text += f"+({round(a,2)})²"
+        sigma = sum([a * a for a in np.squeeze(np.asarray(A[i:, i]))])
+        print("Sigma: "+text+" = ", sigma)
+        k = -sign(A[i, i]) * np.sqrt(sigma)
+        print(f"K: -sign(A[{i}][{i}]={round(A[i,i],2)})*√{sigma} = ", k)
+        beta = sigma - k * A[i, i]
+        print(f"Beta: σ - (k*A[{i}][{i}]={round(A[i,i],2)})  =", beta)
+
+        u = A[:, i].copy()
+        for m in range(0, i):
+            u[m] = 0
+        u[i] -= k
+        u = np.matrix(u)
+
+        print("U:\n", u)
+        print("UT:\n", u.T)
+        # nu stiu dude de ce pt i = 0 da asa
+        if i == 0:
+            u_u_t = u.T @ u
+        else:
+            u_u_t = u @ u.T
+        print("U * U^T:\n", u_u_t)
+        P.append(np.identity(n=len(A)) - (1 / beta) * u_u_t)
+        print(f"P[{i + 1}]:\n", P[i])
+        PIxA = P[i] @ A
+        print(f"P[{i + 1}] @ A:\n{np.matrix.round(PIxA, 3)}")
+        A = PIxA.copy()
+        R = PIxA.copy()
+
+    Q = np.identity(n=len(A))
+    for p in P:
+        Q = Q @ p
+
+    Q = np.squeeze(np.asarray(Q))
+    print("MATRICEA Q (Forma fractie): ")
+    Q = Q.astype(str)
+    for i in range(len(Q)):
+        for j in range(len(Q[0])):
+            Q[i, j] = fractions.Fraction(Q[i, j]).limit_denominator()
+    print(Q)
+    print("MATRICE R: ")
+    print(np.matrix.round(R, 3))
+
+    return R, Q
 
 
 def QR_decomposition_Givens(A, verbose=False, eps=1e-7):
@@ -57,4 +119,14 @@ if __name__ == '__main__':
 
     print("Q: ")
     print(Q)
+
+    # QR decomposition With Householder
+
+    # R, Q = QR_decomposition_Householder(np.array(A), False)  # Turn this to true for all steps
+    #
+    # print("R: ")
+    # print(R)
+    #
+    # print("Q: ")
+    # print(Q)
 
